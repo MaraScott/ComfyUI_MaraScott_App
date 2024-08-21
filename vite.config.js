@@ -28,6 +28,7 @@ export default defineConfig({
   },
   server: {
     port: 3030,
+    open: true,
   },
   preview: {
     port: 3030,

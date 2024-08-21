@@ -10,6 +10,9 @@ export const LoginPage = lazy(() => import('src/pages/login'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
+export const CommandGeneratorPage = lazy(() => import('src/pages/command-generator'));
+
+
 // ----------------------------------------------------------------------
 
 export default function Router() {
@@ -27,6 +30,7 @@ export default function Router() {
         { path: 'user', element: <UserPage /> },
         { path: 'products', element: <ProductsPage /> },
         { path: 'blog', element: <BlogPage /> },
+        { path: 'ComfyUI', element: <CommandGeneratorPage /> },
       ],
     },
     {
