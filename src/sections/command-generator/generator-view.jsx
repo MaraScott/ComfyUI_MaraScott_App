@@ -3,7 +3,7 @@ import { MdInfo } from 'react-icons/md';
 import { Helmet } from 'react-helmet-async';
 import { useState, useEffect, useCallback } from 'react';
 
-import { Box, Tooltip, Checkbox, Container, TextField, IconButton, Typography, FormControlLabel } from '@mui/material';
+import { Box, Select, Tooltip, MenuItem, Checkbox, Container, TextField, IconButton, Typography, FormControlLabel } from '@mui/material';
 
 import argumentsConfig from 'src/components/arguments';
 
@@ -42,7 +42,6 @@ const PreStyled = styled.pre`
 // ----------------------------------------------------------------------
 
 export default function GeneratorView() {
-    // Initialize the state with only the specific default arguments
     const initializeArguments = () => {
         const initialArgs = {
             '--watch': 'custom_nodes\\ComfyUI_MaraScott_nodes\\',
@@ -61,15 +60,18 @@ export default function GeneratorView() {
 
     const updateCommand = useCallback(() => {
         const argsString = Object.keys(selectedArguments)
-            .map(arg => {
-                const value = selectedArguments[arg];
-                let response = `${arg} ${value}`
+            .map(argName => {
+                const argument = argumentsConfig.find(arg => arg.name === argName);
+                const value = selectedArguments[argName];
+                let response = `${argName} ${value}`;
                 if (typeof value === 'boolean') {
-                    response = value ? `${arg}` : '';
+                    response = value ? `${argName}` : '';
+                } else if (typeof argument !== 'undefined' && argument.type === 'select') {
+                    response = value !== '' ? value : '';
                 }
-                return response
+                return response;
             })
-            .filter(Boolean) // Remove any empty strings
+            .filter(Boolean)
             .join(' ');
 
         setCommand(`
@@ -94,15 +96,17 @@ export default function GeneratorView() {
     const handleCheckboxChange = (argName, isChecked) => {
         setSelectedArguments((prev) => {
             const updatedArgs = { ...prev };
-            const { defaultValue } = argumentsConfig.find(arg => arg.name === argName);
+            const argument = argumentsConfig.find(arg => arg.name === argName);
 
             if (isChecked) {
-                if (typeof defaultValue === 'boolean') {
+                if (typeof argument.defaultValue === 'boolean') {
                     updatedArgs[argName] = true;
+                } else if (argument.type === 'select') {
+                    updatedArgs[argName] = updatedArgs[argName] || '';  // Ensure an initial value is set if it is a select
                 } else {
-                    updatedArgs[argName] = defaultValue !== undefined ? defaultValue : '';
+                    updatedArgs[argName] = argument.defaultValue !== undefined ? argument.defaultValue : '';
                 }
-            } else if (typeof defaultValue === 'boolean') {
+            } else if (typeof argument.defaultValue === 'boolean') {
                 updatedArgs[argName] = false;
             } else {
                 delete updatedArgs[argName];
@@ -119,6 +123,47 @@ export default function GeneratorView() {
         }));
     };
 
+    const renderInputComponent = (arg) => {
+        if (Object.prototype.hasOwnProperty.call(selectedArguments, arg.name)) {
+            if (arg.type === 'select') {
+                return (
+                    <Select
+                        value={selectedArguments[arg.name] !== undefined ? selectedArguments[arg.name] : ''}
+                        onChange={(e) => handleInputChange(arg.name, e.target.value)}
+                        displayEmpty
+                        sx={{ marginLeft: 2, width: '60%' }}
+                    >
+                        <MenuItem value="">
+                            <em>select a value</em>
+                        </MenuItem>
+                        {arg.options.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>
+                                {option.label}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                );
+            } 
+            return (
+                <TextField
+                    type={arg.type}
+                    value={selectedArguments[arg.name] !== undefined ? selectedArguments[arg.name] : arg.defaultValue}
+                    onChange={(e) => handleInputChange(arg.name, e.target.value)}
+                    disabled={!Object.prototype.hasOwnProperty.call(selectedArguments, arg.name)}
+                    variant="outlined"
+                    size="small"
+                    sx={{ marginLeft: 2, width: '60%' }}
+                />
+            );
+        }
+
+        return (
+            <Typography variant="body2" sx={{ marginLeft: 2, width: '60%' }}>
+                {arg.defaultValue}
+            </Typography>
+        );
+    };
+
     return (
         <>
             <Helmet>
@@ -126,7 +171,6 @@ export default function GeneratorView() {
             </Helmet>
 
             <Container>
-                {/* Sticky command box */}
                 <Box
                     sx={{
                         position: 'sticky',
@@ -145,7 +189,6 @@ export default function GeneratorView() {
                     </Typography>
                 </Box>
 
-                {/* Scrollable arguments list */}
                 <Box
                     sx={{
                         maxHeight: 'calc(100vh - 150px)',
@@ -153,41 +196,36 @@ export default function GeneratorView() {
                         paddingTop: '16px'
                     }}
                 >
-                    {argumentsConfig.map((arg) => (
-                        <Box key={arg.name} mb={2} display="flex" alignItems="center">
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={
-                                            typeof selectedArguments[arg.name] === 'boolean'
-                                                ? selectedArguments[arg.name]
-                                                : Object.prototype.hasOwnProperty.call(selectedArguments, arg.name)
-                                        }
-                                        onChange={(e) => handleCheckboxChange(arg.name, e.target.checked)}
-                                        sx={{ transform: 'scale(0.8)' }}  // Make the checkbox smaller
-                                    />
-                                }
-                                label={arg.name}
-                                sx={{ fontSize: '0.9rem', flexGrow: 1 }}  // Smaller font size for labels and make it take available space
-                            />
-                            {arg.defaultValue !== null && typeof arg.defaultValue !== 'boolean' && arg.type !== 'checkbox' && (
-                                <TextField
-                                    type={arg.type}
-                                    value={selectedArguments[arg.name] !== undefined ? selectedArguments[arg.name] : arg.defaultValue}
-                                    onChange={(e) => handleInputChange(arg.name, e.target.value)}
-                                    disabled={!Object.prototype.hasOwnProperty.call(selectedArguments, arg.name)}
-                                    variant="outlined"
-                                    size="small"
-                                    sx={{ marginLeft: 2, width: '60%' }}  // Smaller input field
+                    {argumentsConfig.map((arg) => {
+                        // const isSelectChecked = Object.prototype.hasOwnProperty.call(selectedArguments, arg.name) && arg.type === 'select';
+                        const label = arg.name;
+
+                        return (
+                            <Box key={arg.name} mb={2} display="flex" alignItems="center">
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={
+                                                typeof selectedArguments[arg.name] === 'boolean'
+                                                    ? selectedArguments[arg.name]
+                                                    : Object.prototype.hasOwnProperty.call(selectedArguments, arg.name)
+                                            }
+                                            onChange={(e) => handleCheckboxChange(arg.name, e.target.checked)}
+                                            sx={{ transform: 'scale(0.8)' }}
+                                        />
+                                    }
+                                    label={label}
+                                    sx={{ fontSize: '0.9rem', flexGrow: 1 }}
                                 />
-                            )}
-                            <Tooltip title={arg.description} placement="top">
-                                <IconButton size="small" sx={{ marginLeft: 1 }}>
-                                    <MdInfo size={24} />
-                                </IconButton>
-                            </Tooltip>
-                        </Box>
-                    ))}
+                                {renderInputComponent(arg)}
+                                <Tooltip title={arg.description} placement="top">
+                                    <IconButton size="small" sx={{ marginLeft: 1 }}>
+                                        <MdInfo size={24} />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        );
+                    })}
                 </Box>
             </Container>
         </>

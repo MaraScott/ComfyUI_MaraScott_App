@@ -89,6 +89,57 @@ const argumentsConfig = [
         prefix: true,
     },
     {
+        name: 'fpvae',
+        type: 'select',
+        options: [
+            { value: '--fp16-vae', label: '--fp16-vae' },
+            { value: '--fp32-vae', label: '--fp32-vae' },
+            { value: '--bf16-vae', label: '--bf16-vae' },
+        ],
+        description: 'Floating Point precision options for VAE. Available values: --fp16-vae, --fp32-vae, --bf16-vae.',
+    },
+    {
+        name: 'fpunet',
+        type: 'select',
+        options: [
+            { value: '--bf16-unet', label: '--bf16-unet' },
+            { value: '--fp16-unet', label: '--fp16-unet' },
+            { value: '--fp8_e4m3fn-unet', label: '--fp8_e4m3fn-unet' },
+            { value: '--fp8_e5m2-unet', label: '--fp8_e5m2-unet' },
+        ],
+        description: 'Floating Point precision options for UNET. Available values: --bf16-unet, --fp16-unet, --fp8_e4m3fn-unet, --fp8_e5m2-unet.',
+    },
+    {
+        name: 'fpte',
+        type: 'select',
+        options: [
+            { value: '--fp8_e4m3fn-text-enc', label: '--fp8_e4m3fn-text-enc' },
+            { value: '--fp8_e5m2-text-enc', label: '--fp8_e5m2-text-enc' },
+            { value: '--fp16-text-enc', label: '--fp16-text-enc' },
+            { value: '--fp32-text-enc', label: '--fp32-text-enc' },
+        ],
+        description: 'Floating Point precision options for Text Encoder. Available values: --fp8_e4m3fn-text-enc, --fp8_e5m2-text-enc, --fp16-text-enc, --fp32-text-enc.',
+    },
+    {
+        name: 'cache',
+        type: 'select',
+        options: [
+            { value: '--cache-classic', label: '--cache-classic' },
+            { value: '--cache-lru', label: '--cache-lru' },
+        ],
+        description: 'Cache configuration options. Available values: --cache-classic, --cache-lru.',
+    },
+    {
+        name: 'attn',
+        type: 'select',
+        options: [
+            { value: '--use-split-cross-attention', label: '--use-split-cross-attention' },
+            { value: '--use-quad-cross-attention', label: '--use-quad-cross-attention' },
+            { value: '--use-pytorch-cross-attention', label: '--use-pytorch-cross-attention' },
+        ],
+        description: 'Attention configuration options. Available values: --use-split-cross-attention, --use-quad-cross-attention, --use-pytorch-cross-attention.',
+    },
+    {
         name: '--cpu-vae',
         type: 'checkbox',
         description: 'Run the VAE on the CPU.',
@@ -114,17 +165,32 @@ const argumentsConfig = [
         prefix: false,
     },
     {
-        name: '--preview-method',
-        type: 'text',
-        defaultValue: 'NoPreviews',
-        description: 'Default preview method for sampler nodes.',
-        prefix: true,
-    },
-    {
         name: '--disable-xformers',
         type: 'checkbox',
         description: 'Disable xformers.',
         prefix: false,
+    },
+    {
+        name: 'upcast',
+        type: 'select',
+        options: [
+            { value: '--force-upcast-attention', label: '--force-upcast-attention' },
+            { value: '--dont-upcast-attention', label: '--dont-upcast-attention' },
+        ],
+        description: 'Upcast configuration options. Available values: --force-upcast-attention, --dont-upcast-attention.',
+    },
+    {
+        name: 'vram',
+        type: 'select',
+        options: [
+            { value: '--gpu-only', label: '--gpu-only' },
+            { value: '--highvram', label: '--highvram' },
+            { value: '--normalvram', label: '--normalvram' },
+            { value: '--lowvram', label: '--lowvram' },
+            { value: '--novram', label: '--novram' },
+            { value: '--cpu', label: '--cpu' },
+        ],
+        description: 'VRAM usage configuration options. Available values: --gpu-only, --highvram, --normalvram, --lowvram, --novram, --cpu.',
     },
     {
         name: '--reserve-vram',
@@ -199,6 +265,20 @@ const argumentsConfig = [
         type: 'checkbox',
         description: 'Enables more debug prints.',
         prefix: false,
+    },
+    {
+        name: '--front-end-version',
+        type: 'text',
+        defaultValue: 'comfyanonymous/ComfyUI@latest',
+        description: 'Specifies the version of the frontend to be used. This command needs internet connectivity to query and download available frontend implementations from GitHub releases.',
+        prefix: true,
+    },
+    {
+        name: '--front-end-root',
+        type: 'text',
+        defaultValue: '',
+        description: 'The local filesystem path to the directory where the frontend is located. Overrides --front-end-version.',
+        prefix: true,
     },
 ];
 
